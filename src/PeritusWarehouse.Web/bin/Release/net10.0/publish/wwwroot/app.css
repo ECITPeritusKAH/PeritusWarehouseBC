@@ -14,3 +14,10 @@ body { margin: 0; font-family: system-ui, sans-serif; font-size: 18px; backgroun
 .pw-error { color: #b00020; background: #fdecea; border-left: 4px solid #b00020; padding: .6rem .8rem; border-radius: 4px; } .pw-ok { color: #1e7b34; }
 #blazor-error-ui { background: #ffffe0; bottom: 0; display: none; left: 0; padding: .6rem 1rem; position: fixed; width: 100%; }
 .pw-company { margin: 0 0 1rem; color: #5b6b7a; }
+
+.pw-tile.disabled { pointer-events: none; }
+.pw-user { margin-bottom: 1rem; }
+.pw-actions { display: flex; gap: .6rem; margin-top: .6rem; }
+.pw-btn.pw-continue { background: #1e7b34; }
+.pw-topbar { display: flex; justify-content: space-between; }
+.pw-back { margin-left: auto; }

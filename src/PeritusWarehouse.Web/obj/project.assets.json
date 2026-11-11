@@ -50,11 +50,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/PeritusWarehouse.Web.csproj",
+      "projectUniqueName": "/Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/PeritusWarehouse.Web.csproj",
       "projectName": "PeritusWarehouse.Web",
-      "projectPath": "/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/PeritusWarehouse.Web.csproj",
+      "projectPath": "/Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/PeritusWarehouse.Web.csproj",
       "packagesPath": "/Users/kjellare/.nuget/packages/",
-      "outputPath": "/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/obj/",
+      "outputPath": "/Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/kjellare/.nuget/NuGet/NuGet.Config"
