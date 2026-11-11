@@ -1,0 +1,6 @@
+{
+  "folders": [
+    { "name": "AL extension", "path": "al" },
+    { "name": "Web app", "path": "src" }
+  ]
+}

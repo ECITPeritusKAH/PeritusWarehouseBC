@@ -1,0 +1,40 @@
+@page "/items"
+@rendermode InteractiveServer
+@inject IBcClient Bc
+@using PeritusWarehouse.Web.Services
+
+<PageTitle>Item lookup</PageTitle>
+<a href="/">&larr; Menu</a>
+<h1>Item lookup</h1>
+@if (_error is not null) { <p class="pw-error">@_error</p> }
+
+<form @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <input class="pw-input" @bind="_query" placeholder="Scan / enter item no., barcode or name" autofocus inputmode="text" />
+    <button class="pw-btn" disabled="@_busy">Find</button>
+</form>
+
+@foreach (var i in _items)
+{
+    <div class="pw-line">
+        <div><strong>@i.Number</strong> @i.Description @(i.Blocked ? "(blocked)" : "")</div>
+        <div>In stock @i.Inventory @i.Unit &middot; Price @i.UnitPrice.ToString("N2")</div>
+        @if (!string.IsNullOrEmpty(i.Gtin)) { <div>Barcode @i.Gtin</div> }
+    </div>
+}
+@if (_searched && _items.Count == 0 && _error is null) { <p>No items found.</p> }
+
+@code {
+    private string _query = "";
+    private List<ItemInfo> _items = [];
+    private string? _error;
+    private bool _busy, _searched;
+
+    private async Task SearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_query)) return;
+        _busy = true; _error = null;
+        try { _items = await Bc.SearchItemsAsync(_query); _searched = true; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

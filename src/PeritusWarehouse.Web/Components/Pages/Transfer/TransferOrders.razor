@@ -1,0 +1,90 @@
+@page "/transfer"
+@rendermode InteractiveServer
+@inject IBcClient Bc
+@using PeritusWarehouse.Web.Services
+
+<PageTitle>Transfer</PageTitle>
+<a href="/">&larr; Menu</a>
+<h1>Transfer</h1>
+@if (_error is not null) { <p class="pw-error">@_error</p> }
+@if (_message is not null) { <p class="pw-ok">@_message</p> }
+
+@if (_order is null)
+{
+    @if (_loaded && _orders.Count == 0) { <p>No released transfer orders.</p> }
+    <div class="pw-menu">
+        @foreach (var o in _orders)
+        {
+            <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => OpenAsync(o)">@o.Number<br /><small>@o.FromCode &rarr; @o.ToCode</small></button>
+        }
+    </div>
+}
+else
+{
+    <p><button type="button" class="pw-btn secondary" @onclick="Back">&larr; Orders</button> <strong>@_order.Number</strong> @_order.FromCode &rarr; @_order.ToCode</p>
+    <p>
+        <button type="button" class="pw-btn @(_ship ? "primary" : "secondary")" @onclick="() => SetMode(true)">Ship</button>
+        <button type="button" class="pw-btn @(_ship ? "secondary" : "primary")" @onclick="() => SetMode(false)">Receive</button>
+    </p>
+    @foreach (var l in _lines)
+    {
+        var max = _ship ? l.ToShipOpen : l.InTransit;
+        <div class="pw-line">
+            <div><strong>@l.ItemNo</strong> @l.Description</div>
+            <div>Qty @l.Quantity &middot; Shipped @l.Shipped &middot; Received @l.Received &middot; @(_ship ? "Open to ship" : "In transit") @max</div>
+            <input class="pw-input" type="number" step="any" min="0" max="@max" inputmode="decimal" @bind="l.Entry" />
+            <button type="button" class="pw-btn secondary" @onclick="() => l.Entry = max">All</button>
+        </div>
+    }
+    <button class="pw-btn primary" disabled="@_busy" @onclick="PostAsync">@(_ship ? "Post shipment" : "Post receipt")</button>
+}
+
+@code {
+    private List<TransferOrder> _orders = [];
+    private TransferOrder? _order;
+    private List<TransferLine> _lines = [];
+    private bool _ship = true, _busy, _loaded;
+    private string? _error, _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _busy = true;
+        try { _orders = await Bc.GetTransferOrdersAsync(); _loaded = true; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private void Back() { _order = null; _lines = []; _error = null; }
+
+    private void SetMode(bool ship)
+    {
+        _ship = ship;
+        foreach (var l in _lines) l.Entry = ship ? l.QtyToShip : l.QtyToReceive;
+    }
+
+    private async Task OpenAsync(TransferOrder o)
+    {
+        _error = _message = null; _busy = true;
+        try { _lines = await Bc.GetTransferLinesAsync(o.Number); _order = o; SetMode(true); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task PostAsync()
+    {
+        if (_order is null) return;
+        _error = _message = null;
+        if (_lines.Any(l => l.Entry < 0 || l.Entry > (_ship ? l.ToShipOpen : l.InTransit))) { _error = "Quantity is out of range."; return; }
+        if (!_lines.Any(l => l.Entry > 0)) { _error = "Nothing to post."; return; }
+        _busy = true;
+        try
+        {
+            await Bc.PostTransferAsync(_order.Id, _ship, _lines);
+            _message = $"{_order.Number} {(_ship ? "shipped" : "received")}.";
+            _order = null; _lines = [];
+            _orders = await Bc.GetTransferOrdersAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

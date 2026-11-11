@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"my-mcp-server-4262c077": {
+			"url": "https://learn.microsoft.com/api/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

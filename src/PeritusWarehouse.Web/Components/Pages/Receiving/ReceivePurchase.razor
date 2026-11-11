@@ -1,0 +1,69 @@
+@page "/receive/purchase"
+@rendermode InteractiveServer
+@inject IBcClient Bc
+@using PeritusWarehouse.Web.Services
+
+<PageTitle>Receive purchase</PageTitle>
+<a href="/">&larr; Menu</a>
+<h1>Receive purchase</h1>
+
+<form @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <input class="pw-input" @bind="_number" placeholder="Scan / enter purchase order no." autofocus inputmode="text" />
+    <button class="pw-btn" disabled="@_busy">Find</button>
+</form>
+
+@if (_error is not null) { <p class="pw-error">@_error</p> }
+@if (_message is not null) { <p class="pw-ok">@_message</p> }
+
+@if (_order is not null)
+{
+    <h2>@_order.Number <small>@_order.VendorName</small></h2>
+    @foreach (var l in _lines)
+    {
+        <div class="pw-line">
+            <div><strong>@l.ItemNo</strong> @l.Description</div>
+            <div>Ordered @l.Quantity &middot; Received @l.ReceivedQuantity &middot; Open @l.Outstanding</div>
+            <input class="pw-input" type="number" step="any" min="0" max="@l.Outstanding" inputmode="decimal" @bind="l.ToReceive" />
+            <button type="button" class="pw-btn secondary" @onclick="() => l.ToReceive = l.Outstanding">All</button>
+        </div>
+    }
+    <button class="pw-btn primary" disabled="@_busy" @onclick="ReceiveAsync">Post receipt</button>
+}
+
+@code {
+    private string _number = "";
+    private PurchaseOrder? _order;
+    private List<PurchaseLine> _lines = [];
+    private string? _error, _message;
+    private bool _busy;
+
+    private async Task SearchAsync()
+    {
+        _error = _message = null; _order = null; _lines = []; _busy = true;
+        try
+        {
+            _order = await Bc.FindPurchaseOrderAsync(_number.Trim());
+            if (_order is null) _error = "Purchase order not found.";
+            else _lines = await Bc.GetLinesAsync(_order.Number);
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task ReceiveAsync()
+    {
+        if (_order is null) return;
+        _error = _message = null;
+        if (_lines.Any(l => l.ToReceive < 0 || l.ToReceive > l.Outstanding)) { _error = "Quantity exceeds what is outstanding."; return; }
+        if (!_lines.Any(l => l.ToReceive > 0)) { _error = "Nothing to receive."; return; }
+        _busy = true;
+        try
+        {
+            await Bc.ReceiveAsync(_order.Id, _lines);
+            _message = $"Order {_order.Number} received.";
+            _order = null; _lines = []; _number = "";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

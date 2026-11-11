@@ -1,0 +1,96 @@
+@page "/count"
+@rendermode InteractiveServer
+@inject IBcClient Bc
+@using PeritusWarehouse.Web.Services
+
+<PageTitle>Inventory count</PageTitle>
+<a href="/">&larr; Menu</a>
+<h1>Inventory count</h1>
+@if (_error is not null) { <p class="pw-error">@_error</p> }
+@if (_message is not null) { <p class="pw-ok">@_message</p> }
+
+@if (_batch is null)
+{
+    @if (_loaded && _batches.Count == 0) { <p>No count journals found.</p> }
+    <div class="pw-menu">
+        @foreach (var b in _batches)
+        {
+            <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => SelectAsync(b)">@b.Name<br /><small>@b.Description</small></button>
+        }
+    </div>
+}
+else
+{
+<p><button type="button" class="pw-btn secondary" @onclick="Back">&larr; Journals</button> <strong>@_batch.Name</strong></p>
+<form @onsubmit="Filter" @onsubmit:preventDefault>
+    <input class="pw-input" @bind="_search" placeholder="Scan / enter item no. or bin" autofocus inputmode="text" />
+    <button class="pw-btn" disabled="@_busy">Find</button>
+    <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => SelectAsync(_batch!)">Reload</button>
+</form>
+
+@foreach (var l in Visible)
+{
+    <div class="pw-line">
+        <div><strong>@l.ItemNo</strong> @l.Description</div>
+        <div>@l.LocationCode @l.BinCode &middot; Expected @l.CalculatedQuantity &middot; Counted @l.CountedQuantity</div>
+        <input class="pw-input" type="number" step="any" min="0" inputmode="decimal" @bind="l.Entry" />
+        <button type="button" class="pw-btn" disabled="@_busy" @onclick="() => SaveAsync(l)">Save count</button>
+    </div>
+}
+@if (_loaded && !Visible.Any()) { <p>No count lines found.</p> }
+}
+
+@code {
+    private string _search = "";
+    private List<CountBatch> _batches = [];
+    private CountBatch? _batch;
+    private List<CountLine> _lines = [];
+    private string? _error, _message;
+    private bool _busy, _loaded;
+
+    private IEnumerable<CountLine> Visible => string.IsNullOrWhiteSpace(_search)
+        ? _lines
+        : _lines.Where(l => (l.ItemNo ?? "").Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase)
+                         || (l.BinCode ?? "").Contains(_search.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _busy = true;
+        try { _batches = await Bc.GetCountBatchesAsync(); _loaded = true; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private void Back() { _batch = null; _lines = []; _search = ""; _error = _message = null; }
+
+    private void Filter() { _error = _message = null; }
+
+    private async Task SelectAsync(CountBatch batch)
+    {
+        _error = _message = null; _busy = true; _loaded = false;
+        try
+        {
+            _batch = batch;
+            _lines = await Bc.GetCountLinesAsync(batch.Name);
+            foreach (var l in _lines) l.Entry = l.CountedQuantity;
+            _loaded = true;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveAsync(CountLine l)
+    {
+        _error = _message = null;
+        if (l.Entry < 0) { _error = "Quantity cannot be negative."; return; }
+        _busy = true;
+        try
+        {
+            await Bc.SetCountedAsync(l.Id, l.Entry);
+            l.CountedQuantity = l.Entry;
+            _message = $"Counted {l.ItemNo}: {l.Entry}.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

@@ -1,0 +1,76 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IBcClient Bc
+@inject UserSession Session
+@inject Microsoft.Extensions.Options.IOptions<BcOptions> Options
+@using PeritusWarehouse.Web.Services
+<PageTitle>Peritus Warehouse</PageTitle>
+
+<h1>Main menu</h1>
+@if (_company is not null) { <p class="pw-company">Company: <strong>@_company</strong> &middot; Environment: <strong>@(Options.Value.IsConfigured ? Options.Value.Environment : "Demo")</strong></p> }
+@if (_error is not null) { <p class="pw-error">@_error</p> }
+<div class="pw-user">
+    @if (Session.IsRegistered)
+    {
+        <p>Signed in as <strong>@Session.UserId</strong> &middot; Location: <strong>@string.Join(", ", Session.Locations)</strong>
+            <button type="button" class="pw-btn secondary" @onclick="Session.SignOutAsync">Change</button></p>
+    }
+    else
+    {
+        <label for="pw-user-id">Your name / id</label>
+        <input id="pw-user-id" class="pw-input" @bind="_userId" @bind:event="oninput" @onkeydown="OnKey" placeholder="Your name / id" autocomplete="off" />
+        <button type="button" class="pw-btn primary" disabled="@(_busy || _userId.Trim() == "")" @onclick="SignInAsync">Sign in</button>
+        @if (_userError is not null) { <p class="pw-error">@_userError</p> }
+    }
+</div>
+<div class="pw-menu">
+    <a class="pw-tile @Dis" href="receive/purchase" tabindex="@Tab" aria-disabled="@(!Session.IsRegistered)">Receive purchase</a>
+    <a class="pw-tile @Dis" href="putaway" tabindex="@Tab" aria-disabled="@(!Session.IsRegistered)">Put-away</a>
+    <a class="pw-tile @PickDis" href="pick" tabindex="@PickTab" aria-disabled="@(!PickEnabled)">Pick</a>
+    <a class="pw-tile @Dis" href="transfer" tabindex="@Tab" aria-disabled="@(!Session.IsRegistered)">Transfer</a>
+    <a class="pw-tile @Dis" href="count" tabindex="@Tab" aria-disabled="@(!Session.IsRegistered)">Inventory count</a>
+    <a class="pw-tile @Dis" href="items" tabindex="@Tab" aria-disabled="@(!Session.IsRegistered)">Item lookup</a>
+</div>
+
+@code {
+    private string? _company, _error, _userError;
+    private string _userId = "";
+    private bool _busy;
+    private List<PickPattern> _patterns = [];
+    private bool PickEnabled => Session.IsRegistered && _patterns.Any(p =>
+        string.IsNullOrEmpty(p.LocationCode) || Session.Locations.Contains(p.LocationCode, StringComparer.OrdinalIgnoreCase));
+    private string PickDis => PickEnabled ? "" : "disabled";
+    private int PickTab => PickEnabled ? 0 : -1;
+    private string Dis => Session.IsRegistered ? "" : "disabled";
+    private int Tab => Session.IsRegistered ? 0 : -1;
+
+    private async Task OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && _userId.Trim() != "") await SignInAsync();
+    }
+
+    private async Task SignInAsync()
+    {
+        _busy = true; _userError = null;
+        try
+        {
+            if (!await Session.SignInAsync(_userId))
+                _userError = $"'{_userId.Trim()}' is not registered as a warehouse employee at any location in Business Central.";
+        }
+        catch (Exception ex) { _userError = ex.Message; }
+        _busy = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Session.LoadAsync();
+    }
+
+    protected override void OnInitialized() => Session.Changed += () => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _company = await Bc.GetCompanyNameAsync(); _patterns = await Bc.GetPickPatternsAsync(); }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+}

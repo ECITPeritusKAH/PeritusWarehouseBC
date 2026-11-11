@@ -1,0 +1,93 @@
+@inject IBcClient Bc
+@using PeritusWarehouse.Web.Services
+
+<div class="pw-topbar">
+    <a href="/">&larr; Menu</a>
+    @if (OnBack.HasDelegate) { <a href="javascript:void(0)" class="pw-back" @onclick="OnBack">Back</a> }
+</div>
+<h1>@Title</h1>
+@if (_error is not null) { <p class="pw-error">@_error</p> }
+@if (_message is not null) { <p class="pw-ok">@_message</p> }
+
+@if (_active is null)
+{
+    @if (_loaded && _list.Count == 0) { <p>No open @Title.ToLower() found.</p> }
+    <div class="pw-menu">
+        @foreach (var a in _list)
+        {
+            <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => OpenAsync(a)">@a.Number<br /><small>@a.LocationCode</small></button>
+        }
+    </div>
+}
+else
+{
+    <p><button type="button" class="pw-btn secondary" @onclick="Back">&larr; List</button> <strong>@_active.Number</strong></p>
+    @foreach (var l in _lines.OrderBy(l => l.LineNumber))
+    {
+        <div class="pw-line">
+            <div><strong>@(l.ActionType == 1 ? "Take" : "Place")</strong> @l.ItemNo @l.Description</div>
+            <div>Bin @l.BinCode @l.ZoneCode &middot; Qty @l.Quantity @l.Unit &middot; Open @l.Outstanding</div>
+            <input class="pw-input" type="number" step="any" min="0" max="@l.Outstanding" inputmode="decimal" @bind="l.Entry" />
+            <button type="button" class="pw-btn secondary" @onclick="() => l.Entry = l.Outstanding">All</button>
+        </div>
+    }
+    <button class="pw-btn primary" disabled="@_busy" @onclick="RegisterAsync">Register</button>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    // Set for pick batches created from a pattern; the list is then these activities only.
+    [Parameter] public List<WhseActivity>? Preset { get; set; }
+    [Parameter] public EventCallback OnBack { get; set; }
+
+    private List<WhseActivity> _list = [];
+    private WhseActivity? _active;
+    private List<WhseLine> _lines = [];
+    private string? _error, _message;
+    private bool _busy, _loaded;
+
+    protected override async Task OnInitializedAsync() => await LoadListAsync();
+
+    private async Task LoadListAsync()
+    {
+        _busy = true;
+        try { _list = Preset ?? await Bc.GetWhseActivitiesAsync(Kind); _loaded = true; }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private void Back() { _active = null; _lines = []; _error = null; }
+
+    private async Task OpenAsync(WhseActivity a)
+    {
+        _error = _message = null; _busy = true;
+        try
+        {
+            _lines = await Bc.GetWhseLinesAsync(Kind, a.Number);
+            foreach (var l in _lines) l.Entry = l.QtyToHandle;
+            _active = a;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task RegisterAsync()
+    {
+        if (_active is null) return;
+        _error = _message = null;
+        if (_lines.Any(l => l.Entry < 0 || l.Entry > l.Outstanding)) { _error = "Quantity exceeds what is outstanding."; return; }
+        _busy = true;
+        try
+        {
+            await Bc.RegisterWhseActivityAsync(Kind, _active.Id, _lines);
+            _message = $"{_active.Number} registered.";
+            var done = _active.Id;
+            _active = null; _lines = [];
+            if (Preset is null) _list = await Bc.GetWhseActivitiesAsync(Kind);
+            else _list.Remove(_list.First(x => x.Id == done));
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

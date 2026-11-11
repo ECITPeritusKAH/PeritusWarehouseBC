@@ -1,0 +1,122 @@
+@page "/pick"
+@rendermode InteractiveServer
+@inject IBcClient Bc
+@inject UserSession Session
+@using PeritusWarehouse.Web.Services
+
+<PageTitle>Pick</PageTitle>
+
+@if (_batch is not null)
+{
+    <ActivityView Kind="picks" Title="Pick" Preset="_batch" OnBack="BackAsync" />
+}
+else if (_existing)
+{
+    <p><button type="button" class="pw-btn secondary" @onclick="() => _existing = false">&larr; Patterns</button></p>
+    <ActivityView Kind="picks" Title="Pick" />
+}
+else
+{
+    <a href="/">&larr; Menu</a>
+    <h1>Pick</h1>
+    @if (!Session.IsRegistered) { <p class="pw-error">Sign in on the main menu with a warehouse employee id first.</p> }
+    @if (_error is not null) { <p class="pw-error">@_error</p> }
+    <div class="pw-menu">
+        @foreach (var p in _patterns)
+        {
+            var n = Math.Min(p.OrderCount, p.AvailableCount);
+            <button type="button" class="pw-tile @(n == 0 ? "disabled" : "")" disabled="@(_busy || n == 0 || !Session.IsRegistered)" @onclick="() => CreateAsync(p)">
+                @(p.Description ?? p.Code)<br />
+                <small>@n of @p.OrderCount orders @(p.ContainerType is null ? "" : "· " + p.ContainerType)</small>
+            </button>
+        }
+    </div>
+    <p><button type="button" class="pw-btn secondary" @onclick="() => _existing = true">Open existing picks</button></p>
+    <h2>My batches</h2>
+    @if (_message is not null) { <p class="pw-ok">@_message</p> }
+    @if (_claimed is not null && _claimed.Count == 0) { <p>No claimed batches.</p> }
+    @foreach (var b in _claimed ?? [])
+    {
+        <div class="pw-line">
+            <div><strong>@b.PatternCode</strong> &middot; @string.Join(", ", b.Shipments)</div>
+            <small>Release makes the shipments available to the patterns again. Picks already created are kept.</small>
+            <div class="pw-actions">
+                <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => ReleaseAsync(b)">Release batch</button>
+                <button type="button" class="pw-btn pw-continue" disabled="@_busy" @onclick="() => ContinueAsync(b)">Continue</button>
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<PickPattern> _patterns = [];
+    private List<WhseActivity>? _batch;
+    private string? _error, _message;
+    private List<PickBatch>? _claimed;
+    private string _operator => Session.UserId;
+    private bool _busy, _existing;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Session.LoadAsync();
+        if (Session.IsRegistered) await LoadClaimedAsync();
+        StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _patterns = (await Bc.GetPickPatternsAsync()).OrderBy(p => p.Priority).ToList(); }
+        catch (Exception ex) { _error = ex.Message; }
+    }
+
+    private async Task CreateAsync(PickPattern p)
+    {
+        _error = null; _busy = true;
+        try { _batch = await Bc.CreatePickBatchAsync(p.Code, _operator.Trim()); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task LoadClaimedAsync()
+    {
+        _error = _message = null; _busy = true;
+        try { _claimed = await Bc.GetClaimedPickBatchesAsync(_operator); }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task BackAsync()
+    {
+        _batch = null;
+        await LoadClaimedAsync();
+        _patterns = (await Bc.GetPickPatternsAsync()).OrderBy(p => p.Priority).ToList();
+    }
+
+    private async Task ContinueAsync(PickBatch b)
+    {
+        _error = _message = null; _busy = true;
+        try
+        {
+            var acts = await Bc.GetPickBatchActivitiesAsync(b.BatchId);
+            if (acts.Count == 0) _message = "This batch has no open picks. Release it to make the shipments available again.";
+            else _batch = acts;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task ReleaseAsync(PickBatch b)
+    {
+        _error = _message = null; _busy = true;
+        try
+        {
+            await Bc.ReleasePickBatchAsync(b);
+            _message = $"Released batch with {b.Shipments.Count} shipment(s).";
+            _claimed = await Bc.GetClaimedPickBatchesAsync(_operator);
+            _patterns = (await Bc.GetPickPatternsAsync()).OrderBy(p => p.Priority).ToList();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+}

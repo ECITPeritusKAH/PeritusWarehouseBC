@@ -1,0 +1,7 @@
+/tmp/pw-publish/PeritusWarehouse.Web
+/tmp/pw-publish/appsettings.Development.json
+/tmp/pw-publish/appsettings.json
+/tmp/pw-publish/PeritusWarehouse.Web.dll
+/tmp/pw-publish/PeritusWarehouse.Web.runtimeconfig.json
+/tmp/pw-publish/PeritusWarehouse.Web.pdb
+/tmp/pw-publish/PeritusWarehouse.Web.deps.json

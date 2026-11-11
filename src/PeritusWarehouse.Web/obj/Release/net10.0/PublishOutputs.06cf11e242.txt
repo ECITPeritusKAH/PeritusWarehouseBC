@@ -1,0 +1,7 @@
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/PeritusWarehouse.Web
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/appsettings.Development.json
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/appsettings.json
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/PeritusWarehouse.Web.dll
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/PeritusWarehouse.Web.runtimeconfig.json
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/PeritusWarehouse.Web.pdb
+/Users/kjellare/VSCode/Repository/PeritusWarehouse-BC/src/PeritusWarehouse.Web/bin/Release/net10.0/publish/PeritusWarehouse.Web.deps.json
