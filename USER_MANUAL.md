@@ -25,8 +25,11 @@ Open the app in the browser on your handheld: https://peritus-warehouse.azureweb
 ## Pick
 
 1. Open **Pick**. The list shows the pick patterns with the number of shipments available for each.
-2. Choose a pattern and create a pick. The app claims the matching shipments and creates the warehouse picks in BC.
-3. Open the pick, enter the quantity handled on each line, and choose **Register**.
+2. Choose a pattern. The app claims the matching shipments and creates the warehouse picks in BC.
+3. Choose to handle one pick list at a time, or combine the pick lists into one list sorted by Bin.
+4. Create or select a license plate, enter a Take quantity, and confirm it. More license plates can be created whenever needed.
+5. Choose **Place** to review all confirmed Take quantities, enter Place quantities, and confirm them.
+6. Register each pick list separately. Registration posts the saved Take/Place quantities for that pick list.
 
 Which shipments belong to which pattern is set up in BC (see below).
 
@@ -36,6 +39,7 @@ Which shipments belong to which pattern is set up in BC (see below).
 - **Matching rules.** Shipment method (include/exclude), zone, longest item, total weight and total volume. 0 means no limit. Shipments that already have a pick are not offered.
 - **One pattern per shipment.** If several match, the lowest priority number wins, then the lowest code.
 - **Batch.** When you choose a pattern, the app takes up to *Order Count* matching shipments (oldest shipment date first), claims them for you and creates the standard warehouse picks in BC.
+- **License plates.** Set **License Plate Nos.** on each pick pattern to a configured BC number series. The handheld assigns a number only when the operator creates a plate. Take and Place quantities are saved in BC against that batch and plate; only confirmed Place quantities can be registered.
 - **Release batch.** Removes the claim so the shipments can match a pattern again. It does not delete the picks. In the app: Pick > enter your name > *Show my batches* > *Release batch*. In BC: *Warehouse Shipments* > *Release Pick Batch Claim* (the pattern, picked by and claimed at columns show claimed shipments).
 - If a shipment changes after release, it matches a different pattern next time. Once a pick exists, it matches none.
 

@@ -19,6 +19,7 @@ table 91120 "PeritusWH Pick Pattern"
         field(12; "From Volume"; Decimal) { Caption = 'From Volume'; MinValue = 0; }
         field(13; "To Volume"; Decimal) { Caption = 'To Volume'; MinValue = 0; }
         field(14; "Container Type"; Text[50]) { Caption = 'Container Type'; }
+        field(15; "License Plate Nos."; Code[20]) { Caption = 'License Plate Nos.'; TableRelation = "No. Series"; }
     }
 
     keys

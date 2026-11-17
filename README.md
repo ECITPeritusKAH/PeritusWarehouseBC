@@ -62,6 +62,7 @@ Custom API `peritus/warehouse/v1.0` (objects 91100-91299; change `idRanges` if t
 
 Put-away (`/putaway`), Pick (`/pick`) and Transfer (`/transfer`):
 - Put-away and Pick list open warehouse activities (`putAways`, `picks`, pages 91105/91106). Lines come from `warehouseActivityLines` (page 91107); the worker sets *Qty. to Handle* per Take/Place line, then the bound action `register` registers the activity (codeunit 91108 runs `Whse.-Act.-Register`). Warehouse (not inventory) put-aways and picks are supported.
+- Pattern picks let the operator choose one pick at a time or a combined list sorted by Bin. Take and Place confirmations are stored on custom license-plate records (pages 91130/91131); the license plate number is generated from the pattern's **License Plate Nos.** series. Registering a pick list applies its confirmed Place quantities to the standard warehouse activity and posts it.
 - Transfer lists released transfer orders (`transferOrders`, page 91109, actions `ship` and `receive`) with lines from `transferOrderLines` (page 91110). The worker toggles Ship/Receive, sets quantities and posts.
 
 Item lookup (`/items`) searches items by number, barcode (GTIN) or name through the standard BC `items` API.

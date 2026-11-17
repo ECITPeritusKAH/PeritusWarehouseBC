@@ -242,9 +242,68 @@ public class BcClient(HttpClient http, IOptions<BcOptions> options) : IBcClient
         {
             var a = await http.GetFromJsonAsync<ODataList<WhseActivity>>(
                 $"{Base}/picks?$filter={Uri.EscapeDataString($"number eq '{n.Replace("'", "''")}'")}", ct);
-            result.AddRange(a?.value ?? []);
+            foreach (var activity in a?.value ?? [])
+            {
+                activity.BatchId = batchId;
+                result.Add(activity);
+            }
         }
         return result;
+    }
+
+    public async Task<List<PickLicensePlate>> GetPickLicensePlatesAsync(Guid batchId, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        var filter = Uri.EscapeDataString($"batchId eq {batchId}");
+        var result = await http.GetFromJsonAsync<ODataList<PickLicensePlate>>(
+            $"{Base}/pickLicensePlates?$filter={filter}&$orderby=number", ct);
+        return result?.value ?? [];
+    }
+
+    public async Task<PickLicensePlate> CreatePickLicensePlateAsync(Guid batchId, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        using var response = await http.PostAsJsonAsync($"{Base}/pickLicensePlates", new { batchId }, ct);
+        await EnsureSuccessAsync(response, ct);
+        return await response.Content.ReadFromJsonAsync<PickLicensePlate>(ct)
+            ?? throw new HttpRequestException("Business Central did not return the created license plate.");
+    }
+
+    public async Task<List<PickLicensePlateLine>> GetPickLicensePlateLinesAsync(Guid batchId, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        var filter = Uri.EscapeDataString($"batchId eq {batchId}");
+        var result = await http.GetFromJsonAsync<ODataList<PickLicensePlateLine>>(
+            $"{Base}/pickLicensePlateLines?$filter={filter}&$orderby=binCode,activityNumber,activityLineNumber", ct);
+        return result?.value ?? [];
+    }
+
+    public async Task AddPickTakeAsync(Guid batchId, string licensePlateNumber, WhseLine line, decimal quantity, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        using var response = await http.PostAsJsonAsync($"{Base}/pickLicensePlateLines",
+            new
+            {
+                licensePlateNumber,
+                batchId,
+                activityNumber = line.ActivityNumber,
+                activityLineNumber = line.LineNumber,
+                takeQuantity = quantity
+            }, ct);
+        await EnsureSuccessAsync(response, ct);
+    }
+
+    public async Task SetPickPlaceAsync(Guid lineId, decimal quantity, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        await PatchAsync($"{Base}/pickLicensePlateLines({lineId})", new { placeQuantity = quantity }, ct);
+    }
+
+    public async Task RegisterPickActivityAsync(Guid id, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        using var response = await http.PostAsync($"{Base}/picks({id})/Microsoft.NAV.register", null, ct);
+        await EnsureSuccessAsync(response, ct);
     }
 
     private sealed record EmployeeRow([property: System.Text.Json.Serialization.JsonPropertyName("locationCode")] string LocationCode);

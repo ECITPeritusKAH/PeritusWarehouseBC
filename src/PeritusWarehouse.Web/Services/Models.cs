@@ -60,6 +60,7 @@ public class WhseActivity
     [JsonPropertyName("number")] public string Number { get; set; } = "";
     [JsonPropertyName("locationCode")] public string? LocationCode { get; set; }
     [JsonPropertyName("assignedUserId")] public string? AssignedUserId { get; set; }
+    [JsonIgnore] public Guid BatchId { get; set; }
 }
 
 public class WhseLine
@@ -122,6 +123,32 @@ public class PickBatchRow
     [JsonPropertyName("batchId")] public Guid BatchId { get; set; }
     [JsonPropertyName("shipmentNumber")] public string ShipmentNumber { get; set; } = "";
     [JsonPropertyName("patternCode")] public string PatternCode { get; set; } = "";
+}
+
+public class PickLicensePlate
+{
+    [JsonPropertyName("id")] public Guid Id { get; set; }
+    [JsonPropertyName("number")] public string Number { get; set; } = "";
+    [JsonPropertyName("batchId")] public Guid BatchId { get; set; }
+}
+
+public class PickLicensePlateLine
+{
+    [JsonPropertyName("id")] public Guid Id { get; set; }
+    [JsonPropertyName("entryNumber")] public int EntryNumber { get; set; }
+    [JsonPropertyName("licensePlateNumber")] public string LicensePlateNumber { get; set; } = "";
+    [JsonPropertyName("batchId")] public Guid BatchId { get; set; }
+    [JsonPropertyName("activityNumber")] public string ActivityNumber { get; set; } = "";
+    [JsonPropertyName("activityLineNumber")] public int ActivityLineNumber { get; set; }
+    [JsonPropertyName("itemNumber")] public string? ItemNo { get; set; }
+    [JsonPropertyName("binCode")] public string? BinCode { get; set; }
+    [JsonPropertyName("zoneCode")] public string? ZoneCode { get; set; }
+    [JsonPropertyName("unitOfMeasureCode")] public string? Unit { get; set; }
+    [JsonPropertyName("takeQuantity")] public decimal TakeQuantity { get; set; }
+    [JsonPropertyName("placeQuantity")] public decimal PlaceQuantity { get; set; }
+    [JsonPropertyName("postedQuantity")] public decimal PostedQuantity { get; set; }
+
+    [JsonIgnore] public decimal PlaceEntry { get; set; }
 }
 
 public class PickPattern

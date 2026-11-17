@@ -22,6 +22,12 @@ public interface IBcClient
     Task<List<PickPattern>> GetPickPatternsAsync(CancellationToken ct = default);
     // Creates the pick in BC for the pattern; returns the activities in the new batch.
     Task<List<WhseActivity>> CreatePickBatchAsync(string patternCode, string operatorName, CancellationToken ct = default);
+    Task<List<PickLicensePlate>> GetPickLicensePlatesAsync(Guid batchId, CancellationToken ct = default);
+    Task<PickLicensePlate> CreatePickLicensePlateAsync(Guid batchId, CancellationToken ct = default);
+    Task<List<PickLicensePlateLine>> GetPickLicensePlateLinesAsync(Guid batchId, CancellationToken ct = default);
+    Task AddPickTakeAsync(Guid batchId, string licensePlateNumber, WhseLine line, decimal quantity, CancellationToken ct = default);
+    Task SetPickPlaceAsync(Guid lineId, decimal quantity, CancellationToken ct = default);
+    Task RegisterPickActivityAsync(Guid id, CancellationToken ct = default);
     // Batches the operator has claimed and not released.
     Task<List<PickBatch>> GetClaimedPickBatchesAsync(string operatorName, CancellationToken ct = default);
     // Clears the claim so the shipments can match a pattern again. Existing warehouse picks are kept.

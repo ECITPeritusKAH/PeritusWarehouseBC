@@ -7,14 +7,19 @@ permissionset 91120 "PeritusWH Warehouse"
         tabledata "PeritusWH Pick Pattern" = RIMD,
         tabledata "PeritusWH Pick Request" = RIMD,
         tabledata "PeritusWH Pick Shipping Method" = RIMD,
+        tabledata "PeritusWH License Plate" = RIMD,
+        tabledata "PeritusWH Pick LP Line" = RIMD,
         table "PeritusWH Pick Pattern" = X,
         table "PeritusWH Pick Request" = X,
         table "PeritusWH Pick Shipping Method" = X,
+        table "PeritusWH License Plate" = X,
+        table "PeritusWH Pick LP Line" = X,
         codeunit "PeritusWH Whse. Register" = X,
         codeunit "PeritusWH User Manual" = X,
         codeunit "PeritusWH Pick Matching" = X,
         codeunit "PeritusWH Demo Data" = X,
         codeunit "PeritusWH Create Pick Doc" = X,
+        codeunit "No. Series" = X,
         page "PeritusWH Pick Shipping Method" = X,
         page "PeritusWH Pick Request API" = X,
         page "PeritusWH Transfer Line API" = X,
@@ -32,5 +37,7 @@ permissionset 91120 "PeritusWH Warehouse"
         page "PeritusWH Transfer Order API" = X,
         page "PeritusWH Pick API" = X,
         page "PeritusWH Pick Line API" = X,
-        page "PeritusWH Pick Patterns" = X;
+        page "PeritusWH Pick Patterns" = X,
+        page "PeritusWH License Plate API" = X,
+        page "PeritusWH Pick LP Line API" = X;
 }

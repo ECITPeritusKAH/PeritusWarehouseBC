@@ -28,6 +28,7 @@ page 91121 "PeritusWH Pick Pattern API"
                 field(locationCode; Rec."Location Code") { Caption = 'Location Code'; }
                 field(orderCount; Rec."Order Count") { Caption = 'Order Count'; }
                 field(containerType; Rec."Container Type") { Caption = 'Container Type'; }
+                field(licensePlateNos; Rec."License Plate Nos.") { Caption = 'License Plate Nos.'; }
                 field(availableCount; AvailableCount) { Caption = 'Available Count'; }
             }
         }

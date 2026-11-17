@@ -35,6 +35,13 @@ pageextension 91100 "PeritusWH Warehouse Worker RC" extends "Whse. Worker WMS Ro
                         RunObject = Page "Warehouse Shipment List";
                         ToolTip = 'View and process warehouse shipments.';
                     }
+                    action(PeritusWHWarehousePicks)
+                    {
+                        ApplicationArea = Warehouse;
+                        Caption = 'Warehouse Picks';
+                        RunObject = Page "Warehouse Picks";
+                        ToolTip = 'View and process warehouse picks.';
+                    }
                     action(PeritusWHPickWorksheets)
                     {
                         ApplicationArea = Warehouse;

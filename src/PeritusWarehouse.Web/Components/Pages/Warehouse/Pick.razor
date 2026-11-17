@@ -8,7 +8,45 @@
 
 @if (_batch is not null)
 {
-    <ActivityView Kind="picks" Title="Pick" Preset="_batch" OnBack="BackAsync" />
+    @if (_batch.Count == 0)
+    {
+        <p class="pw-error">The selected pick batch has no open pick lists.</p>
+        <button type="button" class="pw-btn secondary" @onclick="BackAsync">&larr; Patterns</button>
+    }
+    else if (!_modeChosen)
+    {
+        <p><button type="button" class="pw-btn secondary" @onclick="BackAsync">&larr; Patterns</button></p>
+        <h1>Choose pick mode</h1>
+        @if (_error is not null) { <p class="pw-error">@_error</p> }
+        <p>@_batch.Count pick list(s) selected.</p>
+        <div class="pw-menu">
+            <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => ChooseModeAsync(false)">
+                One pick list at a time
+            </button>
+            <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => ChooseModeAsync(true)">
+                Combine all picks, sorted by Bin
+            </button>
+        </div>
+    }
+    else
+    {
+        <ActivityView @key="_consolidate" Kind="picks" Title="Pick" Preset="_batch" ConsolidateByBin="_consolidate" PickLicensePlateWorkflow="true" BatchId="_batch[0].BatchId" OnBack="BackAsync" />
+    }
+}
+else if (_selectedPattern is not null)
+{
+    <p><button type="button" class="pw-btn secondary" @onclick="() => _selectedPattern = null">&larr; Patterns</button></p>
+    <h1>Choose pick mode</h1>
+    @if (_error is not null) { <p class="pw-error">@_error</p> }
+    <p>@(_selectedPattern.Description ?? _selectedPattern.Code)</p>
+    <div class="pw-menu">
+        <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => StartPatternAsync(false)">
+            One pick list at a time
+        </button>
+        <button type="button" class="pw-tile" disabled="@_busy" @onclick="() => StartPatternAsync(true)">
+            Combine all picks, sorted by Bin
+        </button>
+    </div>
 }
 else if (_existing)
 {
@@ -25,7 +63,7 @@ else
         @foreach (var p in _patterns)
         {
             var n = Math.Min(p.OrderCount, p.AvailableCount);
-            <button type="button" class="pw-tile @(n == 0 ? "disabled" : "")" disabled="@(_busy || n == 0 || !Session.IsRegistered)" @onclick="() => CreateAsync(p)">
+            <button type="button" class="pw-tile @(n == 0 ? "disabled" : "")" disabled="@(_busy || n == 0 || !Session.IsRegistered)" @onclick="() => _selectedPattern = p">
                 @(p.Description ?? p.Code)<br />
                 <small>@n of @p.OrderCount orders @(p.ContainerType is null ? "" : "· " + p.ContainerType)</small>
             </button>
@@ -50,11 +88,12 @@ else
 
 @code {
     private List<PickPattern> _patterns = [];
+    private PickPattern? _selectedPattern;
     private List<WhseActivity>? _batch;
     private string? _error, _message;
     private List<PickBatch>? _claimed;
     private string _operator => Session.UserId;
-    private bool _busy, _existing;
+    private bool _busy, _existing, _modeChosen, _consolidate;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -70,10 +109,17 @@ else
         catch (Exception ex) { _error = ex.Message; }
     }
 
-    private async Task CreateAsync(PickPattern p)
+    private async Task StartPatternAsync(bool consolidateByBin)
     {
+        if (_selectedPattern is null) return;
         _error = null; _busy = true;
-        try { _batch = await Bc.CreatePickBatchAsync(p.Code, _operator.Trim()); }
+        _consolidate = consolidateByBin;
+        try
+        {
+            _batch = await Bc.CreatePickBatchAsync(_selectedPattern.Code, _operator.Trim());
+            _modeChosen = true;
+            _selectedPattern = null;
+        }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }
     }
@@ -89,8 +135,17 @@ else
     private async Task BackAsync()
     {
         _batch = null;
+        _selectedPattern = null;
+        _modeChosen = false;
         await LoadClaimedAsync();
         _patterns = (await Bc.GetPickPatternsAsync()).OrderBy(p => p.Priority).ToList();
+    }
+
+    private Task ChooseModeAsync(bool consolidateByBin)
+    {
+        _consolidate = consolidateByBin;
+        _modeChosen = true;
+        return Task.CompletedTask;
     }
 
     private async Task ContinueAsync(PickBatch b)
@@ -100,7 +155,11 @@ else
         {
             var acts = await Bc.GetPickBatchActivitiesAsync(b.BatchId);
             if (acts.Count == 0) _message = "This batch has no open picks. Release it to make the shipments available again.";
-            else _batch = acts;
+            else
+            {
+                _batch = acts;
+                _modeChosen = false;
+            }
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }

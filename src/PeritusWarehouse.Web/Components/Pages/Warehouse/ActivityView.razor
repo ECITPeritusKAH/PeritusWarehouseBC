@@ -9,7 +9,108 @@
 @if (_error is not null) { <p class="pw-error">@_error</p> }
 @if (_message is not null) { <p class="pw-ok">@_message</p> }
 
-@if (_active is null)
+@if (PickLicensePlateWorkflow && ConsolidateByBin)
+{
+    @if (_showPlace)
+    {
+        <p><button type="button" class="pw-btn secondary" @onclick="() => _showPlace = false">&larr; Take</button></p>
+        <h2>Place</h2>
+        @foreach (var entry in _licensePlateLines.OrderBy(x => x.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.ActivityNumber).ThenBy(x => x.ActivityLineNumber))
+        {
+            <div class="pw-line">
+                <div><strong>Bin @entry.BinCode</strong> @entry.ZoneCode &middot; @entry.ActivityNumber</div>
+                <div>@entry.ItemNo &middot; License plate @entry.LicensePlateNumber</div>
+                <div>Take @entry.TakeQuantity @UnitFor(entry) &middot; Placed @entry.PlaceQuantity &middot; Posted @entry.PostedQuantity</div>
+                <input class="pw-input" type="number" step="any" min="@entry.PostedQuantity" max="@entry.TakeQuantity" inputmode="decimal" @bind="entry.PlaceEntry" />
+                <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => SavePlaceAsync(entry)">Confirm Place</button>
+            </div>
+        }
+    }
+    else if (_list.Count == 0)
+    {
+        <p>All pick lists in this batch have been registered.</p>
+        <button type="button" class="pw-btn secondary" @onclick="OnBack">Back to patterns</button>
+    }
+    else
+    {
+        <p>@_list.Count pick list(s) remaining. Choose a license plate for each Take; register separately per pick list.</p>
+        <div class="pw-actions">
+            <select class="pw-input" @bind="_selectedLicensePlateNo">
+                <option value="">Select license plate</option>
+                @foreach (var plate in _licensePlates) { <option value="@plate.Number">@plate.Number</option> }
+            </select>
+            <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="CreateLicensePlateAsync">New license plate</button>
+            <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="OpenPlaceAsync">Place (@_licensePlateLines.Count)</button>
+        </div>
+        @foreach (var entry in _combinedLines
+            .Where(x => x.Line.ActionType == 1)
+            .OrderBy(x => x.Line.BinCode, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.Line.ItemNo, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.Activity.Number, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(x => x.Line.LineNumber))
+        {
+            <div class="pw-line">
+                <div><strong>Bin @entry.Line.BinCode</strong> @entry.Line.ZoneCode &middot; @entry.Activity.Number</div>
+                <div><strong>Take</strong> @entry.Line.ItemNo @entry.Line.Description</div>
+                <div>Qty @entry.Line.Quantity @entry.Line.Unit &middot; Remaining @TakeRemaining(entry)</div>
+                <input class="pw-input" type="number" step="any" min="0" max="@TakeRemaining(entry)" inputmode="decimal" @bind="entry.Line.Entry" />
+                <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => SaveTakeAsync(entry.Activity, entry.Line)">Confirm Take</button>
+            </div>
+        }
+        <h2>Register per pick list</h2>
+        @foreach (var activity in _list)
+        {
+            var lineCount = _combinedLines.Count(x => x.Activity.Id == activity.Id && x.Line.ActionType == 1);
+            <div class="pw-line">
+                <strong>@activity.Number</strong>
+                <button type="button" class="pw-btn primary" disabled="@(_busy || lineCount == 0 || !HasPlaceToRegister(activity))" @onclick="() => RegisterPickAsync(activity)">
+                    Register @activity.Number
+                </button>
+            </div>
+        }
+    }
+}
+else if (PickLicensePlateWorkflow && _active is not null)
+{
+    @if (_showPlace)
+    {
+        <p><button type="button" class="pw-btn secondary" @onclick="() => _showPlace = false">&larr; Take</button></p>
+        <h2>Place</h2>
+        @foreach (var entry in _licensePlateLines.OrderBy(x => x.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.ActivityNumber).ThenBy(x => x.ActivityLineNumber))
+        {
+            <div class="pw-line">
+                <div><strong>Bin @entry.BinCode</strong> @entry.ZoneCode &middot; @entry.ActivityNumber</div>
+                <div>@entry.ItemNo &middot; License plate @entry.LicensePlateNumber</div>
+                <div>Take @entry.TakeQuantity @UnitFor(entry) &middot; Placed @entry.PlaceQuantity &middot; Posted @entry.PostedQuantity</div>
+                <input class="pw-input" type="number" step="any" min="@entry.PostedQuantity" max="@entry.TakeQuantity" inputmode="decimal" @bind="entry.PlaceEntry" />
+                <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => SavePlaceAsync(entry)">Confirm Place</button>
+            </div>
+        }
+    }
+    else
+    {
+        <p><button type="button" class="pw-btn secondary" @onclick="Back">&larr; List</button> <strong>@_active.Number</strong></p>
+        <div class="pw-actions">
+            <select class="pw-input" @bind="_selectedLicensePlateNo">
+                <option value="">Select license plate</option>
+                @foreach (var plate in _licensePlates) { <option value="@plate.Number">@plate.Number</option> }
+            </select>
+            <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="CreateLicensePlateAsync">New license plate</button>
+            <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="OpenPlaceAsync">Place (@_licensePlateLines.Count)</button>
+        </div>
+        @foreach (var l in _lines.Where(l => l.ActionType == 1).OrderBy(l => l.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(l => l.LineNumber))
+        {
+            <div class="pw-line">
+                <div><strong>Take</strong> @l.ItemNo @l.Description</div>
+                <div>Bin @l.BinCode @l.ZoneCode &middot; Qty @l.Quantity @l.Unit &middot; Remaining @(l.Outstanding - Taken(_active, l))</div>
+                <input class="pw-input" type="number" step="any" min="0" max="@(l.Outstanding - Taken(_active, l))" inputmode="decimal" @bind="l.Entry" />
+                <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => SaveTakeAsync(_active, l)">Confirm Take</button>
+            </div>
+        }
+        <button class="pw-btn primary" disabled="@(_busy || !HasPlaceToRegister(_active))" @onclick="() => RegisterPickAsync(_active)">Register @_active.Number</button>
+    }
+}
+else if (_active is null)
 {
     @if (_loaded && _list.Count == 0) { <p>No open @Title.ToLower() found.</p> }
     <div class="pw-menu">
@@ -39,20 +140,48 @@ else
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     // Set for pick batches created from a pattern; the list is then these activities only.
     [Parameter] public List<WhseActivity>? Preset { get; set; }
+    [Parameter] public bool ConsolidateByBin { get; set; }
+    [Parameter] public bool PickLicensePlateWorkflow { get; set; }
+    [Parameter] public Guid BatchId { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
 
     private List<WhseActivity> _list = [];
+    private List<PickLineView> _combinedLines = [];
+    private List<PickLicensePlate> _licensePlates = [];
+    private List<PickLicensePlateLine> _licensePlateLines = [];
     private WhseActivity? _active;
     private List<WhseLine> _lines = [];
     private string? _error, _message;
-    private bool _busy, _loaded;
+    private bool _busy, _loaded, _showPlace;
+    private string _selectedLicensePlateNo = "";
 
     protected override async Task OnInitializedAsync() => await LoadListAsync();
 
     private async Task LoadListAsync()
     {
         _busy = true;
-        try { _list = Preset ?? await Bc.GetWhseActivitiesAsync(Kind); _loaded = true; }
+        try
+        {
+            _list = Preset ?? await Bc.GetWhseActivitiesAsync(Kind);
+            if (PickLicensePlateWorkflow && BatchId != Guid.Empty)
+            {
+                _licensePlates = await Bc.GetPickLicensePlatesAsync(BatchId);
+                _licensePlateLines = await Bc.GetPickLicensePlateLinesAsync(BatchId);
+            }
+            if (ConsolidateByBin)
+            {
+                foreach (var activity in _list)
+                {
+                    var lines = await Bc.GetWhseLinesAsync(Kind, activity.Number);
+                    foreach (var line in lines)
+                    {
+                        line.Entry = PickLicensePlateWorkflow ? 0 : line.QtyToHandle;
+                        _combinedLines.Add(new PickLineView(activity, line));
+                    }
+                }
+            }
+            _loaded = true;
+        }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }
     }
@@ -65,8 +194,9 @@ else
         try
         {
             _lines = await Bc.GetWhseLinesAsync(Kind, a.Number);
-            foreach (var l in _lines) l.Entry = l.QtyToHandle;
+            foreach (var l in _lines) l.Entry = PickLicensePlateWorkflow ? 0 : l.QtyToHandle;
             _active = a;
+            _showPlace = false;
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }
@@ -90,4 +220,154 @@ else
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }
     }
+
+    private async Task RegisterCombinedAsync(WhseActivity activity)
+    {
+        var lines = _combinedLines
+            .Where(x => x.Activity.Id == activity.Id)
+            .Select(x => x.Line)
+            .ToList();
+        if (lines.Any(l => l.Entry < 0 || l.Entry > l.Outstanding))
+        {
+            _error = "Quantity exceeds what is outstanding.";
+            return;
+        }
+
+        _error = _message = null;
+        _busy = true;
+        try
+        {
+            await Bc.RegisterWhseActivityAsync(Kind, activity.Id, lines);
+            _combinedLines.RemoveAll(x => x.Activity.Id == activity.Id);
+            _list.RemoveAll(x => x.Id == activity.Id);
+            _message = $"{activity.Number} registered.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task CreateLicensePlateAsync()
+    {
+        if (BatchId == Guid.Empty)
+        {
+            _error = "This pick is not associated with a pick batch.";
+            return;
+        }
+        _error = null;
+        _busy = true;
+        try
+        {
+            var plate = await Bc.CreatePickLicensePlateAsync(BatchId);
+            _licensePlates.Add(plate);
+            _selectedLicensePlateNo = plate.Number;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task SaveTakeAsync(WhseActivity activity, WhseLine line)
+    {
+        _error = null;
+        if (string.IsNullOrWhiteSpace(_selectedLicensePlateNo))
+        {
+            _error = "Select or create a license plate before confirming Take.";
+            return;
+        }
+        var quantity = line.Entry;
+        if (quantity <= 0 || quantity > line.Outstanding - Taken(activity, line))
+        {
+            _error = "Take quantity must be greater than zero and cannot exceed the remaining quantity.";
+            return;
+        }
+        _busy = true;
+        try
+        {
+            await Bc.AddPickTakeAsync(BatchId, _selectedLicensePlateNo, line, quantity);
+            line.Entry = 0;
+            await RefreshLicensePlateDataAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task OpenPlaceAsync()
+    {
+        _error = null;
+        _busy = true;
+        try
+        {
+            await RefreshLicensePlateDataAsync();
+            foreach (var entry in _licensePlateLines)
+                entry.PlaceEntry = entry.PlaceQuantity;
+            _showPlace = true;
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task SavePlaceAsync(PickLicensePlateLine entry)
+    {
+        _error = null;
+        if (entry.PlaceEntry < entry.PostedQuantity || entry.PlaceEntry > entry.TakeQuantity)
+        {
+            _error = "Place quantity must be between the already posted quantity and the quantity taken.";
+            return;
+        }
+        _busy = true;
+        try
+        {
+            await Bc.SetPickPlaceAsync(entry.Id, entry.PlaceEntry);
+            entry.PlaceQuantity = entry.PlaceEntry;
+            _message = $"Place quantity saved for license plate {entry.LicensePlateNumber}.";
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task RegisterPickAsync(WhseActivity activity)
+    {
+        _error = _message = null;
+        _busy = true;
+        try
+        {
+            await Bc.RegisterPickActivityAsync(activity.Id);
+            _message = $"{activity.Number} registered.";
+            _list = await Bc.GetPickBatchActivitiesAsync(BatchId);
+            _combinedLines.Clear();
+            if (ConsolidateByBin)
+                foreach (var openActivity in _list)
+                    foreach (var line in await Bc.GetWhseLinesAsync(Kind, openActivity.Number))
+                        _combinedLines.Add(new PickLineView(openActivity, line));
+            if (_active is not null)
+            {
+                _active = _list.FirstOrDefault(x => x.Id == activity.Id);
+                if (_active is not null)
+                    _lines = await Bc.GetWhseLinesAsync(Kind, _active.Number);
+            }
+            await RefreshLicensePlateDataAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    private async Task RefreshLicensePlateDataAsync()
+    {
+        _licensePlates = await Bc.GetPickLicensePlatesAsync(BatchId);
+        _licensePlateLines = await Bc.GetPickLicensePlateLinesAsync(BatchId);
+    }
+
+    private decimal TakeRemaining(PickLineView entry) => entry.Line.Outstanding - Taken(entry);
+
+    private decimal Taken(PickLineView entry) => Taken(entry.Activity, entry.Line);
+
+    private decimal Taken(WhseActivity activity, WhseLine line) =>
+        _licensePlateLines.Where(x => x.ActivityNumber == activity.Number && x.ActivityLineNumber == line.LineNumber)
+            .Sum(x => x.TakeQuantity - x.PostedQuantity);
+
+    private bool HasPlaceToRegister(WhseActivity activity) =>
+        _licensePlateLines.Any(x => x.ActivityNumber == activity.Number && x.PlaceQuantity > x.PostedQuantity);
+
+    private static string UnitFor(PickLicensePlateLine entry) => entry.Unit ?? "";
+
+    private sealed record PickLineView(WhseActivity Activity, WhseLine Line);
 }

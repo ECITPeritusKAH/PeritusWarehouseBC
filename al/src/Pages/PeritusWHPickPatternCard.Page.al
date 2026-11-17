@@ -18,6 +18,7 @@ page 91125 "PeritusWH Pick Pattern Card"
                 field("Location Code"; Rec."Location Code") { ApplicationArea = All; }
                 field("Order Count"; Rec."Order Count") { ApplicationArea = All; ToolTip = 'Max orders per pick. Fewer are picked if fewer are available.'; }
                 field("Container Type"; Rec."Container Type") { ApplicationArea = All; }
+                field("License Plate Nos."; Rec."License Plate Nos.") { ApplicationArea = All; ToolTip = 'Number series used when a picker creates a license plate for this pattern.'; }
             }
             group(Filters)
             {
