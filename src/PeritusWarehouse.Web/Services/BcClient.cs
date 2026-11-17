@@ -269,6 +269,13 @@ public class BcClient(HttpClient http, IOptions<BcOptions> options) : IBcClient
             ?? throw new HttpRequestException("Business Central did not return the created license plate.");
     }
 
+    public async Task ConfirmPickLicensePlateAsync(Guid licensePlateId, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        using var response = await http.PostAsync($"{Base}/pickLicensePlates({licensePlateId})/Microsoft.NAV.confirmPlace", null, ct);
+        await EnsureSuccessAsync(response, ct);
+    }
+
     public async Task<List<PickLicensePlateLine>> GetPickLicensePlateLinesAsync(Guid batchId, CancellationToken ct = default)
     {
         await AuthorizeAsync(ct);
@@ -343,7 +350,11 @@ public class BcClient(HttpClient http, IOptions<BcOptions> options) : IBcClient
             }).ToList();
         foreach (var batch in batches)
             batch.PickListNumbers = (await GetPickBatchActivitiesAsync(batch.BatchId, ct))
-                .Select(activity => activity.Number)
+                .Select(activity => new PickListDisplay
+                {
+                    Number = activity.Number,
+                    CustomerName = activity.DestinationCustomerName
+                })
                 .ToList();
         return batches;
     }

@@ -15,14 +15,39 @@
     {
         <p><button type="button" class="pw-btn secondary" @onclick="() => _showPlace = false">&larr; Take</button></p>
         <h2>Place</h2>
-        @foreach (var entry in _licensePlateLines.OrderBy(x => x.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.ActivityNumber).ThenBy(x => x.ActivityLineNumber))
+        @foreach (var plateGroup in GroupPlaceLines())
         {
+            var plateEntries = plateGroup.ToList();
+            var placeConfirmed = IsPlaceGroupConfirmed(plateGroup.Key);
             <div class="pw-line">
-                <div><strong>Bin @entry.BinCode</strong> @entry.ZoneCode &middot; @entry.ActivityNumber</div>
-                <div>@entry.ItemNo &middot; License plate @entry.LicensePlateNumber</div>
-                <div>Take @entry.TakeQuantity @UnitFor(entry) &middot; Placed @entry.PlaceQuantity &middot; Posted @entry.PostedQuantity</div>
-                <input class="pw-input" type="number" step="any" min="@entry.PostedQuantity" max="@entry.TakeQuantity" inputmode="decimal" @bind="entry.PlaceEntry" />
-                <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => SavePlaceAsync(entry)">Confirm Place</button>
+                <h3>License plate @plateGroup.Key</h3>
+                @if (placeConfirmed)
+                {
+                    <p class="pw-ok">Place confirmed</p>
+                }
+                else
+                {
+                    <div class="pw-actions">
+                        <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => FillPlaceFromTake(plateEntries)">Fill from Take</button>
+                        <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => ConfirmPlaceAsync(plateEntries)">Confirm Place</button>
+                    </div>
+                }
+                @foreach (var entry in plateEntries.OrderBy(x => x.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.ActivityNumber).ThenBy(x => x.ActivityLineNumber))
+                {
+                    <div class="pw-line">
+                        <div><strong>Bin @entry.BinCode</strong> @entry.ZoneCode &middot; @entry.ActivityNumber</div>
+                        <div>@entry.ItemNo</div>
+                        <div>
+                            Take @entry.TakeQuantity @UnitFor(entry)
+                            @if (entry.PlaceQuantity != 0) { <span> &middot; Placed @entry.PlaceQuantity</span> }
+                            @if (entry.PostedQuantity != 0) { <span> &middot; Posted @entry.PostedQuantity</span> }
+                        </div>
+                        @if (!placeConfirmed)
+                        {
+                            <input class="pw-input" type="number" step="any" min="@entry.PostedQuantity" max="@entry.TakeQuantity" inputmode="decimal" @bind="entry.PlaceEntry" />
+                        }
+                    </div>
+                }
             </div>
         }
         <h2>Register per pick list</h2>
@@ -48,7 +73,7 @@
             <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="OpenPlaceAsync">Place (@_licensePlateLines.Count)</button>
         </div>
         @foreach (var entry in _combinedLines
-            .Where(x => x.Line.ActionType == 1)
+            .Where(x => x.Line.ActionType == 1 && !IsLicensePlateConfirmed(GetSelectedLicensePlate(x.Activity)))
             .OrderBy(x => x.Line.BinCode, StringComparer.OrdinalIgnoreCase)
             .ThenBy(x => x.Line.ItemNo, StringComparer.OrdinalIgnoreCase)
             .ThenBy(x => x.Activity.Number, StringComparer.OrdinalIgnoreCase)
@@ -61,7 +86,7 @@
                 <div class="pw-actions">
                     <select class="pw-input" value="@GetSelectedLicensePlate(entry.Activity)" @onchange="e => SetSelectedLicensePlateAsync(entry.Activity, e.Value?.ToString())">
                         <option value="">Select license plate</option>
-                        @foreach (var plate in _licensePlates) { <option value="@plate.Number">@plate.Number</option> }
+                        @foreach (var plate in AvailableLicensePlates) { <option value="@plate.Number">@plate.Number</option> }
                     </select>
                     <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => CreateLicensePlateAsync(entry.Activity)">New license plate</button>
                 </div>
@@ -77,14 +102,39 @@ else if (PickLicensePlateWorkflow && _active is not null)
     {
         <p><button type="button" class="pw-btn secondary" @onclick="() => _showPlace = false">&larr; Take</button></p>
         <h2>Place</h2>
-        @foreach (var entry in _licensePlateLines.OrderBy(x => x.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.ActivityNumber).ThenBy(x => x.ActivityLineNumber))
+        @foreach (var plateGroup in GroupPlaceLines())
         {
+            var plateEntries = plateGroup.ToList();
+            var placeConfirmed = IsPlaceGroupConfirmed(plateGroup.Key);
             <div class="pw-line">
-                <div><strong>Bin @entry.BinCode</strong> @entry.ZoneCode &middot; @entry.ActivityNumber</div>
-                <div>@entry.ItemNo &middot; License plate @entry.LicensePlateNumber</div>
-                <div>Take @entry.TakeQuantity @UnitFor(entry) &middot; Placed @entry.PlaceQuantity &middot; Posted @entry.PostedQuantity</div>
-                <input class="pw-input" type="number" step="any" min="@entry.PostedQuantity" max="@entry.TakeQuantity" inputmode="decimal" @bind="entry.PlaceEntry" />
-                <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => SavePlaceAsync(entry)">Confirm Place</button>
+                <h3>License plate @plateGroup.Key</h3>
+                @if (placeConfirmed)
+                {
+                    <p class="pw-ok">Place confirmed</p>
+                }
+                else
+                {
+                    <div class="pw-actions">
+                        <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => FillPlaceFromTake(plateEntries)">Fill from Take</button>
+                        <button type="button" class="pw-btn primary" disabled="@_busy" @onclick="() => ConfirmPlaceAsync(plateEntries)">Confirm Place</button>
+                    </div>
+                }
+                @foreach (var entry in plateEntries.OrderBy(x => x.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.ActivityNumber).ThenBy(x => x.ActivityLineNumber))
+                {
+                    <div class="pw-line">
+                        <div><strong>Bin @entry.BinCode</strong> @entry.ZoneCode &middot; @entry.ActivityNumber</div>
+                        <div>@entry.ItemNo</div>
+                        <div>
+                            Take @entry.TakeQuantity @UnitFor(entry)
+                            @if (entry.PlaceQuantity != 0) { <span> &middot; Placed @entry.PlaceQuantity</span> }
+                            @if (entry.PostedQuantity != 0) { <span> &middot; Posted @entry.PostedQuantity</span> }
+                        </div>
+                        @if (!placeConfirmed)
+                        {
+                            <input class="pw-input" type="number" step="any" min="@entry.PostedQuantity" max="@entry.TakeQuantity" inputmode="decimal" @bind="entry.PlaceEntry" />
+                        }
+                    </div>
+                }
             </div>
         }
         <button type="button" class="pw-btn primary" disabled="@(_busy || !CanRegisterPick(_active))" @onclick="() => RegisterPickAsync(_active)">Register @_active.Number</button>
@@ -95,12 +145,12 @@ else if (PickLicensePlateWorkflow && _active is not null)
         <div class="pw-actions">
             <select class="pw-input" value="@GetSelectedLicensePlate(_active)" @onchange="e => SetSelectedLicensePlateAsync(_active, e.Value?.ToString())">
                 <option value="">Select license plate</option>
-                @foreach (var plate in _licensePlates) { <option value="@plate.Number">@plate.Number</option> }
+                @foreach (var plate in AvailableLicensePlates) { <option value="@plate.Number">@plate.Number</option> }
             </select>
             <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => CreateLicensePlateAsync(_active)">New license plate</button>
             <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="OpenPlaceAsync">Place (@_licensePlateLines.Count)</button>
         </div>
-        @foreach (var l in _lines.Where(l => l.ActionType == 1).OrderBy(l => l.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(l => l.LineNumber))
+        @foreach (var l in _lines.Where(l => l.ActionType == 1 && !IsLicensePlateConfirmed(GetSelectedLicensePlate(_active))).OrderBy(l => l.BinCode, StringComparer.OrdinalIgnoreCase).ThenBy(l => l.LineNumber))
         {
             <div class="pw-line">
                 <div><strong>Take</strong> @l.ItemNo @l.Description</div>
@@ -176,6 +226,7 @@ else
             {
                 _licensePlates = await Bc.GetPickLicensePlatesAsync(BatchId);
                 _licensePlateLines = await Bc.GetPickLicensePlateLinesAsync(BatchId);
+                await ClearConfirmedActiveLicensePlatesAsync();
             }
             if (ConsolidateByBin)
             {
@@ -294,6 +345,11 @@ else
             _error = "Select or create a license plate before confirming Take.";
             return;
         }
+        if (IsLicensePlateConfirmed(licensePlateNo))
+        {
+            _error = "A Place-confirmed license plate cannot be used for Take.";
+            return;
+        }
         var quantity = line.PickEntry ?? 0;
         if (quantity <= 0 || quantity > TakeRemaining(activity, line))
         {
@@ -319,30 +375,83 @@ else
         {
             await RefreshLicensePlateDataAsync();
             foreach (var entry in _licensePlateLines)
-                entry.PlaceEntry = entry.PlaceQuantity;
+                entry.PlaceEntry = entry.PlaceQuantity == 0 ? null : entry.PlaceQuantity;
             _showPlace = true;
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }
     }
 
-    private async Task SavePlaceAsync(PickLicensePlateLine entry)
+    private static void FillPlaceFromTake(List<PickLicensePlateLine> entries)
     {
-        _error = null;
-        if (entry.PlaceEntry < entry.PostedQuantity || entry.PlaceEntry > entry.TakeQuantity)
+        foreach (var entry in entries)
+            entry.PlaceEntry = entry.TakeQuantity;
+    }
+
+    private async Task ConfirmPlaceAsync(List<PickLicensePlateLine> entries)
+    {
+        _error = _message = null;
+        if (entries.Count == 0)
+            return;
+        if (entries.Any(entry => (entry.PlaceEntry ?? 0) < entry.PostedQuantity || (entry.PlaceEntry ?? 0) > entry.TakeQuantity))
         {
-            _error = "Place quantity must be between the already posted quantity and the quantity taken.";
+            _error = "Each Place quantity must be between its posted quantity and the quantity taken.";
+            return;
+        }
+        var licensePlate = _licensePlates.FirstOrDefault(plate =>
+            string.Equals(plate.Number, entries[0].LicensePlateNumber, StringComparison.OrdinalIgnoreCase));
+        if (licensePlate is null)
+        {
+            _error = $"License plate {entries[0].LicensePlateNumber} was not found in this pick batch.";
             return;
         }
         _busy = true;
         try
         {
-            await Bc.SetPickPlaceAsync(entry.Id, entry.PlaceEntry);
-            entry.PlaceQuantity = entry.PlaceEntry;
-            _message = $"Place quantity saved for license plate {entry.LicensePlateNumber}.";
+            foreach (var entry in entries)
+            {
+                var placeQuantity = entry.PlaceEntry ?? 0;
+                await Bc.SetPickPlaceAsync(entry.Id, placeQuantity);
+                entry.PlaceQuantity = placeQuantity;
+            }
+            await Bc.ConfirmPickLicensePlateAsync(licensePlate.Id);
+            licensePlate.PlaceConfirmed = true;
+            await ClearConfirmedActiveLicensePlatesAsync();
+            _message = $"Place quantities saved and confirmed for license plate {licensePlate.Number}.";
         }
         catch (Exception ex) { _error = ex.Message; }
         finally { _busy = false; }
+    }
+
+    private IEnumerable<IGrouping<string, PickLicensePlateLine>> GroupPlaceLines()
+    {
+        var lines = _licensePlateLines.AsEnumerable();
+        if (!ConsolidateByBin && _active is not null)
+            lines = lines.Where(line => line.ActivityNumber == _active.Number);
+        return lines
+            .GroupBy(line => line.LicensePlateNumber, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => IsPlaceGroupConfirmed(group.Key))
+            .ThenBy(group => group.Key, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private bool IsPlaceGroupConfirmed(string licensePlateNumber) =>
+        IsLicensePlateConfirmed(licensePlateNumber);
+
+    private IEnumerable<PickLicensePlate> AvailableLicensePlates =>
+        _licensePlates.Where(plate => !plate.PlaceConfirmed);
+
+    private bool IsLicensePlateConfirmed(string? licensePlateNumber) =>
+        !string.IsNullOrWhiteSpace(licensePlateNumber) &&
+        _licensePlates.Any(plate =>
+            plate.PlaceConfirmed && string.Equals(plate.Number, licensePlateNumber, StringComparison.OrdinalIgnoreCase));
+
+    private async Task ClearConfirmedActiveLicensePlatesAsync()
+    {
+        foreach (var activity in _list.Where(activity => IsLicensePlateConfirmed(activity.ActiveLicensePlateNumber)).ToList())
+        {
+            await Bc.SetPickActiveLicensePlateAsync(activity.Id, "");
+            activity.ActiveLicensePlateNumber = null;
+        }
     }
 
     private async Task RegisterPickAsync(WhseActivity activity)
@@ -406,6 +515,11 @@ else
     {
         var selection = licensePlateNo?.Trim() ?? "";
         _error = null;
+        if (IsLicensePlateConfirmed(selection))
+        {
+            _error = "A Place-confirmed license plate cannot be selected for Take.";
+            return;
+        }
         _busy = true;
         try
         {

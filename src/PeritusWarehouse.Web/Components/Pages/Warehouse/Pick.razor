@@ -79,9 +79,14 @@ else
             <div class="pw-batch-picklists">
                 @if (b.PickListNumbers.Count > 0)
                 {
-                    @foreach (var pickListNumber in b.PickListNumbers)
+                    @foreach (var pickList in b.PickListNumbers)
                     {
-                        <strong>@pickListNumber</strong>
+                        <div><b>@pickList.Number</b>
+                        @if (!string.IsNullOrWhiteSpace(pickList.CustomerName))
+                        {
+                            <span> - @pickList.CustomerName</span>
+                        }
+                        </div>
                     }
                 }
                 else

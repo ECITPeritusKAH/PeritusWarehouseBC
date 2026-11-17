@@ -26,9 +26,31 @@ page 91106 "PeritusWH Pick API"
                 field(locationCode; Rec."Location Code") { Caption = 'Location Code'; Editable = false; }
                 field(assignedUserId; Rec."Assigned User ID") { Caption = 'Assigned User Id'; Editable = false; }
                 field(activeLicensePlateNumber; Rec."PeritusWH Active LP No.") { Caption = 'Active License Plate Number'; }
+                field(destinationCustomerName; DestinationCustomerName) { Caption = 'Destination Customer Name'; Editable = false; }
             }
         }
     }
+
+    var
+        DestinationCustomerName: Text[100];
+
+    trigger OnAfterGetRecord()
+    var
+        PickListLine: Record "Warehouse Activity Line";
+        Customer: Record Customer;
+    begin
+        Clear(DestinationCustomerName);
+        PickListLine.SetRange("Activity Type", PickListLine."Activity Type"::Pick);
+        PickListLine.SetRange("No.", Rec."No.");
+        if not PickListLine.FindFirst() then
+            exit;
+        if PickListLine."Destination Type" <> PickListLine."Destination Type"::Customer then
+            exit;
+        if PickListLine."Destination No." = '' then
+            exit;
+        if Customer.Get(PickListLine."Destination No.") then
+            DestinationCustomerName := Customer.Name;
+    end;
 
     [ServiceEnabled]
     procedure register(var ActionContext: WebServiceActionContext)

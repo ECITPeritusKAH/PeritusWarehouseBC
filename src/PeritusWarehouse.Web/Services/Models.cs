@@ -61,6 +61,7 @@ public class WhseActivity
     [JsonPropertyName("locationCode")] public string? LocationCode { get; set; }
     [JsonPropertyName("assignedUserId")] public string? AssignedUserId { get; set; }
     [JsonPropertyName("activeLicensePlateNumber")] public string? ActiveLicensePlateNumber { get; set; }
+    [JsonPropertyName("destinationCustomerName")] public string? DestinationCustomerName { get; set; }
     [JsonIgnore] public Guid BatchId { get; set; }
 }
 
@@ -117,7 +118,13 @@ public class PickBatch
     public Guid ShipmentRecordId { get; set; }
     public string PatternCode { get; set; } = "";
     public List<string> Shipments { get; set; } = [];
-    public List<string> PickListNumbers { get; set; } = [];
+    public List<PickListDisplay> PickListNumbers { get; set; } = [];
+}
+
+public class PickListDisplay
+{
+    public string Number { get; set; } = "";
+    public string? CustomerName { get; set; }
 }
 
 public class PickBatchRow
@@ -133,6 +140,7 @@ public class PickLicensePlate
     [JsonPropertyName("id")] public Guid Id { get; set; }
     [JsonPropertyName("number")] public string Number { get; set; } = "";
     [JsonPropertyName("batchId")] public Guid BatchId { get; set; }
+    [JsonPropertyName("placeConfirmed")] public bool PlaceConfirmed { get; set; }
 }
 
 public class PickLicensePlateLine
@@ -151,7 +159,7 @@ public class PickLicensePlateLine
     [JsonPropertyName("placeQuantity")] public decimal PlaceQuantity { get; set; }
     [JsonPropertyName("postedQuantity")] public decimal PostedQuantity { get; set; }
 
-    [JsonIgnore] public decimal PlaceEntry { get; set; }
+    [JsonIgnore] public decimal? PlaceEntry { get; set; }
 }
 
 public class PickPattern

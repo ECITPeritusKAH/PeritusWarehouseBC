@@ -26,7 +26,22 @@ page 91130 "PeritusWH License Plate API"
                 field(patternCode; Rec."Pattern Code") { Caption = 'Pattern Code'; Editable = false; }
                 field(noSeries; Rec."No. Series") { Caption = 'No. Series'; Editable = false; }
                 field(createdAt; Rec."Created At") { Caption = 'Created At'; Editable = false; }
+                field(placeConfirmed; Rec."Place Confirmed") { Caption = 'Place Confirmed'; Editable = false; }
             }
         }
     }
+
+    [ServiceEnabled]
+    procedure confirmPlace(var ActionContext: WebServiceActionContext)
+    begin
+        if not Rec."Place Confirmed" then begin
+            Rec."Place Confirmed" := true;
+            Rec.Modify(true);
+        end;
+
+        ActionContext.SetObjectType(ObjectType::Page);
+        ActionContext.SetObjectId(Page::"PeritusWH License Plate API");
+        ActionContext.AddEntityKey(Rec.FieldNo(SystemId), Rec.SystemId);
+        ActionContext.SetResultCode(WebServiceActionResultCode::Updated);
+    end;
 }

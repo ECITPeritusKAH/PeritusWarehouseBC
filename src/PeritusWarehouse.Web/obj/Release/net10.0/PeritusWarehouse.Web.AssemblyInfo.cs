@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PeritusWarehouse.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4a5ed7f9c529a2cf6d8a1906613a4c44e5343153")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ed52bb244495cc4fa82cffb74af24f5ebfff0ed1")]
 [assembly: System.Reflection.AssemblyProductAttribute("PeritusWarehouse.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PeritusWarehouse.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

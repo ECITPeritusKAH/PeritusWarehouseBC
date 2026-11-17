@@ -24,6 +24,7 @@ public interface IBcClient
     Task<List<WhseActivity>> CreatePickBatchAsync(string patternCode, string operatorName, CancellationToken ct = default);
     Task<List<PickLicensePlate>> GetPickLicensePlatesAsync(Guid batchId, CancellationToken ct = default);
     Task<PickLicensePlate> CreatePickLicensePlateAsync(Guid batchId, CancellationToken ct = default);
+    Task ConfirmPickLicensePlateAsync(Guid licensePlateId, CancellationToken ct = default);
     Task<List<PickLicensePlateLine>> GetPickLicensePlateLinesAsync(Guid batchId, CancellationToken ct = default);
     Task SetPickActiveLicensePlateAsync(Guid activityId, string? licensePlateNumber, CancellationToken ct = default);
     Task AddPickTakeAsync(Guid batchId, string licensePlateNumber, WhseLine line, decimal quantity, CancellationToken ct = default);

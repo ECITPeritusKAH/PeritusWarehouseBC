@@ -68,6 +68,13 @@ pageextension 91100 "PeritusWH Warehouse Worker RC" extends "Whse. Worker WMS Ro
                         RunObject = Page "Item List";
                         ToolTip = 'View and edit item records.';
                     }
+                    action(PeritusWHLicensePlateTracking)
+                    {
+                        ApplicationArea = Warehouse;
+                        Caption = 'License Plate Tracking';
+                        RunObject = Page "PeritusWH LP Tracking";
+                        ToolTip = 'View pick license-plate tracking lines.';
+                    }
                     action(PeritusWHBinContents)
                     {
                         ApplicationArea = Warehouse;
@@ -101,19 +108,19 @@ pageextension 91100 "PeritusWH Warehouse Worker RC" extends "Whse. Worker WMS Ro
                         RunObject = Page "PeritusWH Pick Patterns";
                         ToolTip = 'Configure rules for matching warehouse shipments to pick patterns.';
                     }
-                    action(PeritusWHLocations)
+                    action(PeritusWHLicensePlateEdit)
                     {
                         ApplicationArea = Warehouse;
-                        Caption = 'Locations';
-                        RunObject = Page "Location List";
-                        ToolTip = 'View and edit warehouse locations.';
+                        Caption = 'License Plate Edit';
+                        RunObject = Page "PeritusWH License Plate Edit";
+                        ToolTip = 'View and edit license-plate records.';
                     }
-                    action(PeritusWHWarehouseSetup)
+                    action(PeritusWHLicensePlateLineEdit)
                     {
                         ApplicationArea = Warehouse;
-                        Caption = 'Warehouse Setup';
-                        RunObject = Page "Warehouse Setup";
-                        ToolTip = 'Configure warehouse management settings.';
+                        Caption = 'License Plate Line Edit';
+                        RunObject = Page "PeritusWH LP Line Edit";
+                        ToolTip = 'View and edit pick license-plate lines.';
                     }
                 }
                 group(PeritusWHUserManual)

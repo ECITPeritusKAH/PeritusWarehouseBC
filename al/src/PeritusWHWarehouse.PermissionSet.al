@@ -40,5 +40,7 @@ permissionset 91120 "PeritusWH Warehouse"
         page "PeritusWH Pick Patterns" = X,
         page "PeritusWH License Plate API" = X,
         page "PeritusWH Pick LP Line API" = X,
+        page "PeritusWH License Plate Edit" = X,
+        page "PeritusWH LP Line Edit" = X,
         page "PeritusWH LP Tracking" = X;
 }

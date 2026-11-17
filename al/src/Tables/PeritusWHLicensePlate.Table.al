@@ -10,6 +10,7 @@ table 91130 "PeritusWH License Plate"
         field(3; "Pattern Code"; Code[20]) { Caption = 'Pattern Code'; TableRelation = "PeritusWH Pick Pattern"; }
         field(4; "No. Series"; Code[20]) { Caption = 'No. Series'; TableRelation = "No. Series"; }
         field(5; "Created At"; DateTime) { Caption = 'Created At'; }
+        field(6; "Place Confirmed"; Boolean) { Caption = 'Place Confirmed'; }
     }
 
     keys

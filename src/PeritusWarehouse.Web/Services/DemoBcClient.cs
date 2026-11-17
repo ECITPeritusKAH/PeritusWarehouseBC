@@ -62,6 +62,14 @@ public class DemoBcClient : IBcClient
         return Task.FromResult(plate);
     }
 
+    public Task ConfirmPickLicensePlateAsync(Guid licensePlateId, CancellationToken ct = default)
+    {
+        var plate = _pickLicensePlates.FirstOrDefault(x => x.Id == licensePlateId)
+            ?? throw new InvalidOperationException("License plate was not found.");
+        plate.PlaceConfirmed = true;
+        return Task.CompletedTask;
+    }
+
     public Task<List<PickLicensePlateLine>> GetPickLicensePlateLinesAsync(Guid batchId, CancellationToken ct = default) =>
         Task.FromResult(_pickLicensePlateLines.Where(x => x.BatchId == batchId).ToList());
 

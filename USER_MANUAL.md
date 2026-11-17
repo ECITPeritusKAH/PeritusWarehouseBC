@@ -28,7 +28,7 @@ Open the app in a browser on your handheld or PC: https://peritus-warehouse.azur
 2. Choose a pattern. The app claims the matching shipments and creates the warehouse picks in BC.
 3. Choose to handle one pick list at a time, or combine the pick lists into one list sorted by Bin.
 4. Create or select a license plate, enter a Take quantity, and confirm it. The selected license plate is saved in BC for that pick list and restored when you return to it. More license plates can be created whenever needed.
-5. Choose **Place** to review all confirmed Take quantities, enter Place quantities, and confirm them. Register is available here when the saved Place quantities equal the Take quantities for every picked line in that pick list.
+5. Choose **Place** to review the picked quantities grouped by license plate. Unconfirmed plates appear first. Use **Fill from Take** to set each Place quantity for that plate equal to its Take quantity, or enter Place quantities manually, then choose **Confirm Place** once for that license plate. The confirmation is saved on the license plate in BC. Register is available here when the saved Place quantities equal the Take quantities for every picked line in that pick list.
 6. Register each pick list separately from Place. Registration posts the saved Take/Place quantities for that pick list.
 
 Which shipments belong to which pattern is set up in BC (see below).
@@ -40,7 +40,7 @@ Use the Peritus Warehouse web app in your PC browser; the license-plate workflow
 1. Open **Pick**, choose a pattern, then choose whether to work one pick list at a time or combine the batch.
 2. Before confirming a Take quantity, select an existing license plate or choose **New license plate**. New numbers come from the number series configured on the pick pattern.
 3. Enter the quantity and choose **Confirm Take**. The pick list remembers the selected plate when you return to it.
-4. Choose **Place** to review each picked item, its license plate, and its Take, Place, and Posted quantities. Enter the Place quantity and choose **Confirm Place**.
+4. Choose **Place** to review items grouped by license plate; unconfirmed plates appear first. Use **Fill from Take** to copy the Take quantities to Place, or enter Place quantities manually, then choose **Confirm Place** once for the plate. Confirmation is saved on the license plate in BC.
 5. Register the pick list from the Place screen. In combined mode, each pick list is registered separately.
 
 Plate assignments and quantities are saved in BC. Use the tracking actions described below to review them in BC.
