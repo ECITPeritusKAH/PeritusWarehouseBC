@@ -76,7 +76,20 @@ else
     @foreach (var b in _claimed ?? [])
     {
         <div class="pw-line">
-            <div><strong>@b.PatternCode</strong> &middot; @string.Join(", ", b.Shipments)</div>
+            <div class="pw-batch-picklists">
+                @if (b.PickListNumbers.Count > 0)
+                {
+                    @foreach (var pickListNumber in b.PickListNumbers)
+                    {
+                        <strong>@pickListNumber</strong>
+                    }
+                }
+                else
+                {
+                    <strong>No open pick lists</strong>
+                }
+            </div>
+            <small class="pw-batch-shipments"><strong>@b.PatternCode</strong> &middot; Shipments: @string.Join(", ", b.Shipments)</small>
             <small>Release makes the shipments available to the patterns again. Picks already created are kept.</small>
             <div class="pw-actions">
                 <button type="button" class="pw-btn secondary" disabled="@_busy" @onclick="() => ReleaseAsync(b)">Release batch</button>

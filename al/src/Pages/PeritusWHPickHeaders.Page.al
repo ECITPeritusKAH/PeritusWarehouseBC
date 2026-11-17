@@ -11,7 +11,7 @@ page 91106 "PeritusWH Pick API"
     DelayedInsert = true;
     ODataKeyFields = SystemId;
     InsertAllowed = false;
-    ModifyAllowed = false;
+    ModifyAllowed = true;
     DeleteAllowed = false;
     Caption = 'Pick API';
 
@@ -25,6 +25,7 @@ page 91106 "PeritusWH Pick API"
                 field(number; Rec."No.") { Caption = 'Number'; Editable = false; }
                 field(locationCode; Rec."Location Code") { Caption = 'Location Code'; Editable = false; }
                 field(assignedUserId; Rec."Assigned User ID") { Caption = 'Assigned User Id'; Editable = false; }
+                field(activeLicensePlateNumber; Rec."PeritusWH Active LP No.") { Caption = 'Active License Plate Number'; }
             }
         }
     }

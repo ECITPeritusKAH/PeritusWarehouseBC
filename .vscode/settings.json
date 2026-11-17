@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/c992b952-aac8-4043-ab25-d0aa6d80ba50/resourceGroups/PeritusWarehouse/providers/Microsoft.Web/sites/peritus-warehouse",
+    "appService.deploySubpath": "src/PeritusWarehouse.Web/bin/Release/net10.0/publish"
+}

@@ -61,7 +61,6 @@
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/scopedcss/Components/Layout/ReconnectModal.razor.rz.scp.css
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/scopedcss/bundle/PeritusWarehouse.Web.styles.css
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/scopedcss/projectbundle/PeritusWarehouse.Web.bundle.scp.css
-/Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/compressed/9havvb3vn2-{0}-vtm98cj87i-vtm98cj87i.gz
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/compressed/kp0dtlfeeb-{0}-abdmv1u4y3-abdmv1u4y3.gz
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/compressed/h1xjfodeh6-{0}-ne14ti1q68-ne14ti1q68.gz
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/compressed/586h65n16p-{0}-ig5xotzpx5-ig5xotzpx5.gz
@@ -77,3 +76,4 @@
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/PeritusWarehouse.Web.pdb
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/PeritusWarehouse.Web.genruntimeconfig.cache
 /Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/ref/PeritusWarehouse.Web.dll
+/Users/kjellare/VSCode/Repository/PeritusWarehouseBC/src/PeritusWarehouse.Web/obj/Release/net10.0/compressed/9havvb3vn2-{0}-bw0kuvpwvn-bw0kuvpwvn.gz

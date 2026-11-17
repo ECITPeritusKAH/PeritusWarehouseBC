@@ -60,6 +60,7 @@ public class WhseActivity
     [JsonPropertyName("number")] public string Number { get; set; } = "";
     [JsonPropertyName("locationCode")] public string? LocationCode { get; set; }
     [JsonPropertyName("assignedUserId")] public string? AssignedUserId { get; set; }
+    [JsonPropertyName("activeLicensePlateNumber")] public string? ActiveLicensePlateNumber { get; set; }
     [JsonIgnore] public Guid BatchId { get; set; }
 }
 
@@ -82,6 +83,7 @@ public class WhseLine
     [JsonPropertyName("qtyToHandle")] public decimal QtyToHandle { get; set; }
 
     [JsonIgnore] public decimal Entry { get; set; }
+    [JsonIgnore] public decimal? PickEntry { get; set; }
 }
 
 public class TransferOrder
@@ -115,6 +117,7 @@ public class PickBatch
     public Guid ShipmentRecordId { get; set; }
     public string PatternCode { get; set; } = "";
     public List<string> Shipments { get; set; } = [];
+    public List<string> PickListNumbers { get; set; } = [];
 }
 
 public class PickBatchRow

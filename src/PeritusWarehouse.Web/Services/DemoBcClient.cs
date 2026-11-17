@@ -23,6 +23,7 @@ public class DemoBcClient : IBcClient
     private readonly Guid _pickActivityId = Guid.NewGuid();
     private Guid _pickBatchId;
     private int _licensePlateSequence;
+    private string? _activePickLicensePlateNumber;
     private List<WhseLine> _wl =
     [
         new() { Id = Guid.NewGuid(), ActivityType = 1, ActivityNumber = "DEMO1", LineNumber = 10000, ActionType = 1, ItemNo = "1896-S", Description = "ATHENS Desk", BinCode = "RECEIVE", Quantity = 4, Outstanding = 4, QtyToHandle = 4, Unit = "PCS" },
@@ -38,7 +39,7 @@ public class DemoBcClient : IBcClient
 
     public Task<List<WhseActivity>> GetWhseActivitiesAsync(string kind, CancellationToken ct = default) =>
         Task.FromResult(kind == "picks"
-            ? (_pickLines.Count == 0 ? new List<WhseActivity>() : [new() { Id = _pickActivityId, Number = "PICK-DEMO", LocationCode = "MAIN", BatchId = _pickBatchId }])
+            ? (_pickLines.Count == 0 ? new List<WhseActivity>() : [new() { Id = _pickActivityId, Number = "PICK-DEMO", LocationCode = "MAIN", BatchId = _pickBatchId, ActiveLicensePlateNumber = _activePickLicensePlateNumber }])
             : (_wl.Count == 0 ? new List<WhseActivity>() : [new() { Id = _actId, Number = "DEMO1", LocationCode = "MAIN" }]));
 
     public Task<List<WhseLine>> GetWhseLinesAsync(string kind, string number, CancellationToken ct = default) =>
@@ -63,6 +64,14 @@ public class DemoBcClient : IBcClient
 
     public Task<List<PickLicensePlateLine>> GetPickLicensePlateLinesAsync(Guid batchId, CancellationToken ct = default) =>
         Task.FromResult(_pickLicensePlateLines.Where(x => x.BatchId == batchId).ToList());
+
+    public Task SetPickActiveLicensePlateAsync(Guid activityId, string? licensePlateNumber, CancellationToken ct = default)
+    {
+        if (activityId != _pickActivityId)
+            throw new InvalidOperationException("Pick activity was not found.");
+        _activePickLicensePlateNumber = licensePlateNumber;
+        return Task.CompletedTask;
+    }
 
     public Task AddPickTakeAsync(Guid batchId, string licensePlateNumber, WhseLine line, decimal quantity, CancellationToken ct = default)
     {
@@ -166,7 +175,7 @@ public class DemoBcClient : IBcClient
     public Task<List<WhseActivity>> GetPickBatchActivitiesAsync(Guid batchId, CancellationToken ct = default) =>
         Task.FromResult(_pickLines.Count == 0
             ? new List<WhseActivity>()
-            : [new() { Id = _pickActivityId, Number = "PICK-DEMO", LocationCode = "MAIN", BatchId = batchId }]);
+            : [new() { Id = _pickActivityId, Number = "PICK-DEMO", LocationCode = "MAIN", BatchId = batchId, ActiveLicensePlateNumber = _activePickLicensePlateNumber }]);
 
     public Task<List<WhseActivity>> CreatePickBatchAsync(string patternCode, string operatorName, CancellationToken ct = default)
     {
@@ -178,6 +187,7 @@ public class DemoBcClient : IBcClient
         ];
         _pickLicensePlates.Clear();
         _pickLicensePlateLines.Clear();
+        _activePickLicensePlateNumber = null;
         return GetPickBatchActivitiesAsync(_pickBatchId, ct);
     }
 }

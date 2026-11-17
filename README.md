@@ -62,7 +62,7 @@ Custom API `peritus/warehouse/v1.0` (objects 91100-91299; change `idRanges` if t
 
 Put-away (`/putaway`), Pick (`/pick`) and Transfer (`/transfer`):
 - Put-away and Pick list open warehouse activities (`putAways`, `picks`, pages 91105/91106). Lines come from `warehouseActivityLines` (page 91107); the worker sets *Qty. to Handle* per Take/Place line, then the bound action `register` registers the activity (codeunit 91108 runs `Whse.-Act.-Register`). Warehouse (not inventory) put-aways and picks are supported.
-- Pattern picks let the operator choose one pick at a time or a combined list sorted by Bin. Take and Place confirmations are stored on custom license-plate records (pages 91130/91131); the license plate number is generated from the pattern's **License Plate Nos.** series. Registering a pick list applies its confirmed Place quantities to the standard warehouse activity and posts it.
+- Pattern picks let the operator choose one pick at a time or a combined list sorted by Bin. The last active license plate is stored in the `PeritusWH Active LP No.` warehouse activity header field (table extension 91122), exposed as `activeLicensePlateNumber` on the picks API. Take and Place confirmations are stored on custom license-plate records (pages 91130/91131); the license plate number is generated from the pattern's **License Plate Nos.** series. Registering from Place is enabled when the saved Place quantity equals the Take quantity for each picked line, then applies the quantities to the standard warehouse activity and posts it.
 - Transfer lists released transfer orders (`transferOrders`, page 91109, actions `ship` and `receive`) with lines from `transferOrderLines` (page 91110). The worker toggles Ship/Receive, sets quantities and posts.
 
 Item lookup (`/items`) searches items by number, barcode (GTIN) or name through the standard BC `items` API.
@@ -70,6 +70,22 @@ Item lookup (`/items`) searches items by number, barcode (GTIN) or name through 
 Inventory count lists all journals (item journal batches) in the template set by `BusinessCentral:CountTemplate` (default `PHYS. INVE`). Create lines with Calculate Inventory; the app records counts only, and posting the journal is done in BC.
 
 Publish it to BC, then give the Entra app registration a BC permission set (e.g. `D365 BUS FULL ACCESS`, or narrower).
+
+## Azure App Service
+
+The VS Code **Publish** task runs `dotnet publish`; this creates local files but does not deploy them.
+To deploy with the recommended Azure App Service extension:
+
+1. Sign in to Azure in VS Code and run **Publish** on `src/PeritusWarehouse.Web`.
+2. In Explorer, right-click `src/PeritusWarehouse.Web/bin/Release/net10.0/publish` and choose **Deploy to Web App...**.
+3. Select the Azure subscription and the `peritus-warehouse` App Service, then confirm deployment. Accept the prompt to save the target for future deploys.
+
+The site URL is `https://peritus-warehouse.azurewebsites.net`. The extension is recommended in
+`.vscode/extensions.json`.
+
+For full Visual Studio, `src/PeritusWarehouse.Web/Properties/PublishProfiles/peritus-warehouse.pubxml`
+provides a Windows Web Deploy profile. Authenticate with the App Service publish credentials; do not
+commit the generated `.pubxml.user` file, which may contain credentials.
 
 ## Pick patterns
 

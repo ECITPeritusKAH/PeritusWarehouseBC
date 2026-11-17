@@ -278,6 +278,12 @@ public class BcClient(HttpClient http, IOptions<BcOptions> options) : IBcClient
         return result?.value ?? [];
     }
 
+    public async Task SetPickActiveLicensePlateAsync(Guid activityId, string? licensePlateNumber, CancellationToken ct = default)
+    {
+        await AuthorizeAsync(ct);
+        await PatchAsync($"{Base}/picks({activityId})", new { activeLicensePlateNumber = licensePlateNumber ?? "" }, ct);
+    }
+
     public async Task AddPickTakeAsync(Guid batchId, string licensePlateNumber, WhseLine line, decimal quantity, CancellationToken ct = default)
     {
         await AuthorizeAsync(ct);
@@ -325,7 +331,7 @@ public class BcClient(HttpClient http, IOptions<BcOptions> options) : IBcClient
         var who = operatorName.Trim().ToUpperInvariant().Replace("'", "''");
         var r = await http.GetFromJsonAsync<ODataList<PickBatchRow>>(
             $"{Base}/pickBatches?$filter={Uri.EscapeDataString($"pickedBy eq '{who}'")}", ct);
-        return (r?.value ?? [])
+        var batches = (r?.value ?? [])
             .Where(x => x.BatchId != Guid.Empty)
             .GroupBy(x => x.BatchId)
             .Select(g => new PickBatch
@@ -335,6 +341,11 @@ public class BcClient(HttpClient http, IOptions<BcOptions> options) : IBcClient
                 PatternCode = g.First().PatternCode,
                 Shipments = g.Select(x => x.ShipmentNumber).ToList()
             }).ToList();
+        foreach (var batch in batches)
+            batch.PickListNumbers = (await GetPickBatchActivitiesAsync(batch.BatchId, ct))
+                .Select(activity => activity.Number)
+                .ToList();
+        return batches;
     }
 
     public async Task ReleasePickBatchAsync(PickBatch batch, CancellationToken ct = default)
